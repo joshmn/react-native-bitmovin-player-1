@@ -1,0 +1,19 @@
+{
+  "name": "react-native-bitmovin-player",
+  "version": "1.0.0",
+  "description": "Bitmovin player React Native module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react-native",
+    "module",
+    "bitmovin",
+    "player",
+    "video"
+  ],
+  "author": "CodeKraft",
+  "license": "MIT",
+  "homepage": "http://www.codekraft.fr"
+}
