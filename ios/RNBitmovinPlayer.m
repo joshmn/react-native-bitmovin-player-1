@@ -30,6 +30,35 @@
     
     [configuration setSourceItemWithString:config[@"source"][@"url"] error:NULL];
     
+    // Fairplay config
+    BMPFairplayConfiguration *fairplayConfig = [[BMPFairplayConfiguration alloc] initWithLicenseUrl:[NSURL URLWithString:@"https://lic.staging.drmtoday.com/license-server-fairplay?offline=true"] certificateURL:[NSURL URLWithString:@"https://lic.staging.drmtoday.com/license-server-fairplay/cert/kinow_lacinetek"]];
+    
+    NSString *userDataString = @"{\"userId\":\"user1\", \"sessionId\":\"session-test\", \"merchant\":\"kinow_lacinetek\"}";
+    NSData *userData = [userDataString dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *userDataBase64 = [userData base64EncodedStringWithOptions:0];
+    
+    fairplayConfig.licenseRequestHeaders = [NSDictionary dictionaryWithObject:userDataBase64 forKey:@"x-dt-custom-data"];
+    
+    [fairplayConfig setPrepareContentId:^NSString * _Nonnull(NSString * _Nonnull contentId) {
+        NSString *pattern = @"skd://drmtoday?";
+        NSString *contentIdNew = [contentId substringFromIndex:pattern.length];
+        return contentIdNew;
+    }];
+    
+    [fairplayConfig setPrepareMessage:^NSData * _Nonnull(NSData * _Nonnull spcData, NSString * _Nonnull assetID) {
+        NSString *base64String = [spcData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+        NSString *uriEncodedMessage = [base64String stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.alphanumericCharacterSet];
+        
+        NSString *message = [NSString stringWithFormat:@"spc=%@&%@", uriEncodedMessage, assetID];
+        return [message dataUsingEncoding:NSUTF8StringEncoding];
+    }];
+
+    [fairplayConfig setPrepareCertificate:^NSData * _Nonnull(NSData * _Nonnull certificate) {
+        return certificate;
+    }];
+    
+    [configuration.sourceItem addDRMConfiguration:fairplayConfig];
+    
     if (config[@"source"][@"title"]) {
         configuration.sourceItem.itemTitle = config[@"source"][@"title"];
     }
