@@ -34,6 +34,12 @@ import com.bitmovin.player.config.PlayerConfiguration;
 import com.bitmovin.player.BitmovinPlayer;
 import com.bitmovin.player.BitmovinPlayerView;
 import com.bitmovin.player.ui.FullscreenHandler;
+import com.bitmovin.player.config.drm.DRMSystems;
+import com.bitmovin.player.config.media.SourceConfiguration;
+import com.bitmovin.player.config.media.SourceItem;
+import com.bitmovin.player.config.drm.DRMConfiguration;
+import com.bitmovin.player.config.drm.WidevineConfiguration;
+import com.bitmovin.player.config.drm.PrepareLicenseCallback;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -46,6 +52,12 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.HashMap;
+import java.util.Base64;
+import java.util.Base64.Encoder;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerView> implements FullscreenHandler, LifecycleEventListener {
 
@@ -176,9 +188,43 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         }
 
         if (sourceMap != null && sourceMap.getString("url") != null) {
-            configuration.setSourceItem(sourceMap.getString("url"));
 
-            if (sourceMap.getString("title") != null) {
+            String userDataString = new String("{\"userId\":\"user1\", \"sessionId\":\"session-test\", \"merchant\":\"kinow_lacinetek\"}");
+            Map<String, String> userDataMap = new HashMap<String, String>();
+            Encoder encoder = Base64.getEncoder();
+            byte[] data = encoder.encode(userDataString.getBytes());
+
+            userDataMap.put("dt-custom-data", new String(data));
+
+            WidevineConfiguration widevineConfiguration = new WidevineConfiguration("https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/");
+            widevineConfiguration.setHttpHeaders(userDataMap);
+
+            widevineConfiguration.setPrepareLicenseCallback(new PrepareLicenseCallback()
+            {
+                @Override
+                public byte[] prepareLicense(byte[] licenseResponse)
+                {
+                    String json = new String(licenseResponse);
+                    try
+                    {
+                        JSONObject jsonObject = new JSONObject(json);
+                        String license = jsonObject.getString("license");
+                        return android.util.Base64.decode(license, android.util.Base64.DEFAULT);
+                    }
+                    catch (JSONException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    return new byte[0];
+                }
+            });
+            SourceItem sourceItem = new SourceItem(sourceMap.getString("url"));
+            sourceItem.addDRMConfiguration(widevineConfiguration);
+            SourceConfiguration sourceConfiguration = new SourceConfiguration();
+            sourceConfiguration.addSourceItem(sourceItem);
+            configuration.setSourceConfiguration(sourceConfiguration);
+
+            /*if (sourceMap.getString("title") != null) {
                 configuration.getSourceItem().setTitle(sourceMap.getString("title"));
             }
 
@@ -221,7 +267,7 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
                 if (styleMap.hasKey("fullscreenIcon") && styleMap.getBoolean("fullscreenIcon")) {
                     _playerView.setFullscreenHandler(this);
                 }
-            }
+            }*/
 
             _player.setup(configuration);
         }
