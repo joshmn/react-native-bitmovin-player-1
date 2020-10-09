@@ -9,6 +9,10 @@
 @synthesize player = _player;
 @synthesize playerView = _playerView;
 
+double _progress = 0;
+BOOL _isFullscreen = NO;
+BOOL _finished = NO;
+
 - (void)dealloc {
     [_player destroy];
     
@@ -23,6 +27,15 @@
     return self;
 }
 
+-(void)setInitialProgress:(double)initialProgress {
+    _progress = initialProgress;
+    [_player seek:initialProgress];
+}
+
+-(void)setIsFullscreen:(BOOL)isFullscreen {
+    _isFullscreen = isFullscreen;
+}
+
 - (void)setConfiguration:(NSDictionary *)config {
     BMPPlayerConfiguration *configuration = [BMPPlayerConfiguration new];
     
@@ -31,9 +44,9 @@
     [configuration setSourceItemWithString:config[@"source"][@"url"] error:NULL];
     
     // Fairplay config
-    BMPFairplayConfiguration *fairplayConfig = [[BMPFairplayConfiguration alloc] initWithLicenseUrl:[NSURL URLWithString:@"https://lic.staging.drmtoday.com/license-server-fairplay?offline=true"] certificateURL:[NSURL URLWithString:@"https://lic.staging.drmtoday.com/license-server-fairplay/cert/kinow_lacinetek"]];
+    BMPFairplayConfiguration *fairplayConfig = [[BMPFairplayConfiguration alloc] initWithLicenseUrl:[NSURL URLWithString:@"https://lic.drmtoday.com/license-server-fairplay?offline=true"] certificateURL:[NSURL URLWithString:@"https://lic.drmtoday.com/license-server-fairplay/cert/kinow_lacinetek"]];
     
-    NSString *userDataString = @"{\"userId\":\"user1\", \"sessionId\":\"session-test\", \"merchant\":\"kinow_lacinetek\"}";
+    NSString *userDataString = [NSString stringWithFormat:@"{\"userId\":\"%@\", \"sessionId\":\"%@\", \"merchant\":\"kinow_lacinetek\"}", config[@"source"][@"userId"], config[@"source"][@"sessionId"]];
     NSData *userData = [userDataString dataUsingEncoding:NSUTF8StringEncoding];
     NSString *userDataBase64 = [userData base64EncodedStringWithOptions:0];
     
@@ -106,6 +119,14 @@
     [self bringSubviewToFront:_playerView];
 }
 
+- (NSDictionary *) calculateProgres:(double) currentTime {
+    double currentProgress = currentTime / _player.duration;
+    double percentage = round(currentProgress * 100);
+    
+    NSDictionary *response = [NSDictionary dictionaryWithObjectsAndKeys:@"currentTime", currentTime, @"percentage", percentage, nil];
+    return response;
+}
+
 #pragma mark BMPFullscreenHandler protocol
 - (BOOL)isFullscreen {
     return _fullscreen;
@@ -121,13 +142,23 @@
 
 #pragma mark BMPPlayerListener
 - (void)onReady:(BMPReadyEvent *)event {
-    _onReady(@{});
+    [_player seek:_progress];
+    _finished = NO;
+    
+    _onReady(@{
+        @"duration": @(_player.duration)
+    });
 }
 
 - (void)onPlay:(BMPPlayEvent *)event {
-    _onPlay(@{
-              @"time": @(event.time),
-              });
+    if (_finished) {
+        _onReplay(@{});
+        _finished = NO;
+    } else {
+        _onPlay(@{
+        @"time": @(event.time),
+        });
+    }
 }
 
 - (void)onPaused:(BMPPausedEvent *)event {
@@ -137,8 +168,14 @@
 }
 
 - (void)onTimeChanged:(BMPTimeChangedEvent *)event {
+    _progress = event.currentTime;
+    
+    double currentProgress = event.currentTime / _player.duration;
+    double percentage = round(currentProgress * 100);
+    
     _onTimeChanged(@{
-                @"time": @(event.currentTime),
+                @"currentTime": @(event.currentTime),
+                @"percentage": @(percentage),
                 });
 }
 
@@ -151,6 +188,8 @@
 }
 
 - (void)onPlaybackFinished:(BMPPlaybackFinishedEvent *)event {
+    _finished = YES;
+    
     _onPlaybackFinished(@{});
 }
 
@@ -176,7 +215,18 @@
 }
 
 - (void)onSeek:(BMPSeekEvent *)event {
+    _progress = event.seekTarget;
+    
+    double currentProgress = event.seekTarget / _player.duration;
+    double percentage = round(currentProgress * 100);
+    
+    if (percentage < 95) {
+        _finished = NO;
+    }
+    
     _onSeek(@{
+              @"currentTime": @(event.seekTarget),
+              @"percentage": @(percentage),
               @"seekTarget": @(event.seekTarget),
               @"position": @(event.position),
               });
@@ -188,12 +238,30 @@
 
 #pragma mark BMPUserInterfaceListener
 - (void)onFullscreenEnter:(BMPFullscreenEnterEvent *)event {
-    _onFullscreenEnter(@{});
+    if (_isFullscreen) {
+        _onFullscreenExit(@{
+            @"currentTime": @(_progress)
+        });
+    } else {
+        _onFullscreenEnter(@{
+            @"currentTime": @(_progress)
+        });
+    }
+    
 }
 
 - (void)onFullscreenExit:(BMPFullscreenExitEvent *)event {
-    _onFullscreenExit(@{});
+    if (_isFullscreen) {
+        _onFullscreenExit(@{
+            @"currentTime": @(_progress)
+        });
+    } else {
+        _onFullscreenEnter(@{
+            @"currentTime": @(_progress)
+        });
+    }
 }
+
 - (void)onControlsShow:(BMPControlsShowEvent *)event {
     _onControlsShow(@{});
 }
