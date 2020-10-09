@@ -7,6 +7,8 @@
 @property (nonatomic, strong) BMPBitmovinPlayerView *playerView;
 
 @property (readonly, getter=isFullscreen, nonatomic) BOOL fullscreen;
+@property (nonatomic) double initialProgress;
+@property (nonatomic) BOOL isFullscreen;
 
 @property (nonatomic, copy) NSDictionary *configuration;
 
@@ -17,6 +19,7 @@
 
 @property (nonatomic, copy) RCTBubblingEventBlock onReady;
 @property (nonatomic, copy) RCTBubblingEventBlock onPlay;
+@property (nonatomic, copy) RCTBubblingEventBlock onReplay;
 @property (nonatomic, copy) RCTBubblingEventBlock onPaused;
 @property (nonatomic, copy) RCTBubblingEventBlock onTimeChanged;
 @property (nonatomic, copy) RCTBubblingEventBlock onStallStarted;
