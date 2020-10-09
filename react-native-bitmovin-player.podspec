@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.source            = { :git => 'https://github.com/netyweb/react-native-bitmovin-player.git' }
   s.source_files  = "ios/**/*.{h,m}"
 
-  s.platform     = :ios, "9.0"
+  s.platform     = :ios, "14.0"
 
   s.dependency 'React-Core'
   s.dependency "BitmovinPlayer"
