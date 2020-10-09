@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		990781BE23D71BF200020A59 /* RNBitmovinVideoManagerModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 990781BD23D71BF200020A59 /* RNBitmovinVideoManagerModule.m */; };
 		C16EADDA211056EA00569421 /* RNBitmovinPlayerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C16EADD9211056EA00569421 /* RNBitmovinPlayerManager.m */; };
 		C1FFC04C211B551700566734 /* RNBitmovinPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = C1FFC04B211B551700566734 /* RNBitmovinPlayer.m */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,8 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRNBitmovinPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNBitmovinPlayer.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		990781BC23D71BA900020A59 /* RNBitmovinVideoManagerModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNBitmovinVideoManagerModule.h; sourceTree = "<group>"; };
+		990781BD23D71BF200020A59 /* RNBitmovinVideoManagerModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNBitmovinVideoManagerModule.m; sourceTree = "<group>"; };
 		C16EADD8211056EA00569421 /* RNBitmovinPlayerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNBitmovinPlayerManager.h; sourceTree = "<group>"; };
 		C16EADD9211056EA00569421 /* RNBitmovinPlayerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNBitmovinPlayerManager.m; sourceTree = "<group>"; };
 		C1FFC04A211B551700566734 /* RNBitmovinPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNBitmovinPlayer.h; sourceTree = "<group>"; };
@@ -53,6 +56,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				990781BC23D71BA900020A59 /* RNBitmovinVideoManagerModule.h */,
+				990781BD23D71BF200020A59 /* RNBitmovinVideoManagerModule.m */,
 				C1FFC04A211B551700566734 /* RNBitmovinPlayer.h */,
 				C1FFC04B211B551700566734 /* RNBitmovinPlayer.m */,
 				C16EADD8211056EA00569421 /* RNBitmovinPlayerManager.h */,
@@ -100,6 +105,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 58B511D21A9E6C8500147676;
@@ -117,6 +123,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				990781BE23D71BF200020A59 /* RNBitmovinVideoManagerModule.m in Sources */,
 				C1FFC04C211B551700566734 /* RNBitmovinPlayer.m in Sources */,
 				C16EADDA211056EA00569421 /* RNBitmovinPlayerManager.m in Sources */,
 			);
