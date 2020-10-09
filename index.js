@@ -45,6 +45,7 @@ class BitmovinPlayer extends React.Component {
 
     onReady: PropTypes.func,
     onPlay: PropTypes.func,
+    onReplay: PropTypes.func,
     onPaused: PropTypes.func,
     onTimeChanged: PropTypes.func,
     onStallStarted: PropTypes.func,
@@ -67,6 +68,7 @@ class BitmovinPlayer extends React.Component {
 
     onReady: EMPTY_FN,
     onPlay: EMPTY_FN,
+    onReplay: EMPTY_FN,
     onPaused: EMPTY_FN,
     onTimeChanged: EMPTY_FN,
     onStallStarted: EMPTY_FN,
@@ -88,7 +90,7 @@ class BitmovinPlayer extends React.Component {
     maxHeight: null,
   }
 
-  _onReady = () => {
+  _onReady = (e) => {
     const {
       onReady,
     } = this.props;
@@ -113,7 +115,7 @@ class BitmovinPlayer extends React.Component {
       );
     }
 
-    onReady();
+    onReady(e);
   }
 
   play = () => {
@@ -178,6 +180,11 @@ class BitmovinPlayer extends React.Component {
       maxHeight,
     } = this.state;
 
+    const offlineSource = Platform.select({
+      ios: configuration.offlineSource || null,
+      android: configuration.offlineSource || ""
+    });
+
     return (
       <RNBitmovinPlayer
         {...this.props}
@@ -186,6 +193,7 @@ class BitmovinPlayer extends React.Component {
         configuration={{
           ...DEFAULT_CONFIGURATION,
           ...configuration,
+          offlineSource
         }}
         style={[
           maxHeight
@@ -221,4 +229,5 @@ const RNBitmovinPlayer = requireNativeComponent(
   },
 );
 
+export { default as RNBitmovinVideoManager } from './VideoManager';
 export default BitmovinPlayer;
