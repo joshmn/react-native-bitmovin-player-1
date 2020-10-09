@@ -17,6 +17,8 @@ RCT_EXPORT_MODULE(RNBitmovinPlayer);
 }
 
 RCT_EXPORT_VIEW_PROPERTY(configuration, NSDictionary);
+RCT_EXPORT_VIEW_PROPERTY(initialProgress, double);
+RCT_EXPORT_VIEW_PROPERTY(isFullscreen, BOOL);
 
 RCT_EXPORT_VIEW_PROPERTY(onFullscreenEnter, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onFullscreenExit, RCTBubblingEventBlock);
@@ -25,6 +27,7 @@ RCT_EXPORT_VIEW_PROPERTY(onControlsHide, RCTBubblingEventBlock);
 
 RCT_EXPORT_VIEW_PROPERTY(onReady, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlay, RCTBubblingEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onReplay, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPaused, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onTimeChanged, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onStallStarted, RCTBubblingEventBlock);
