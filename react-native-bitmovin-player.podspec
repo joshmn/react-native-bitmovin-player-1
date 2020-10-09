@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios, "9.0"
 
-  s.dependency 'React'
+  s.dependency 'React-Core'
   s.dependency "BitmovinPlayer"
 
 end
