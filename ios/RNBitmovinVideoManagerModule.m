@@ -5,9 +5,7 @@
 
 BMPSourceItem *sourceItem;
 
-@implementation RNBitmovinVideoManagerModule {
-    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
-}
+@implementation RNBitmovinVideoManagerModule
 
 RCT_EXPORT_MODULE();
 
@@ -20,7 +18,8 @@ RCT_EXPORT_MODULE();
 }
 
 RCT_EXPORT_METHOD(download: (nonnull NSDictionary *)configuration){
-
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
+    
     if (!configuration[@"url"]) {
         [self sendEventWithName:@"onDownloadError" body:@"URL is not provided"];
         return ;
@@ -118,7 +117,14 @@ RCT_EXPORT_METHOD(download: (nonnull NSDictionary *)configuration){
     RCTLog(@"%@", tracks.textTracks[0].label);
 }
 
+- (void)offlineManagerOfflineLicenseDidExpire:(nonnull BMPOfflineManager *)offlineManager {
+    RCTLog(@"Offline License Did Expire");
+}
+
+
 RCT_EXPORT_METHOD(getState: (nonnull NSString *) url ) {
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
+    
     sourceItem = [[BMPSourceItem alloc] initWithUrl:(NSURL *) [NSURL URLWithString:url]];
 
     switch ([offlineManager offlineStateForSourceItem:sourceItem]) {
@@ -148,31 +154,39 @@ RCT_EXPORT_METHOD(delete: (nonnull NSDictionary *)itemToDelete) {
         [self sendEventWithName:@"onDeleteError" body:@"Source is not provided"];
         return ;
     }
+    
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
 
     BMPSourceItem *sourceItemToDelete = [BMPSourceItem fromJsonData:itemToDelete[@"source"] error:NULL ];
     [offlineManager deleteOfflineDataForSourceItem:sourceItemToDelete];
 }
 
 RCT_EXPORT_METHOD(pauseDownload) {
-    if(!sourceItem || !offlineManager) {
+    if(!sourceItem) {
         return ;
     }
+    
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
 
     [offlineManager suspendDownloadForSourceItem:sourceItem];
 }
 
 RCT_EXPORT_METHOD(resumeDownload) {
-    if(!sourceItem || !offlineManager) {
+    if(!sourceItem) {
         return ;
     }
+    
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
 
     [offlineManager resumeDownloadForSourceItem:sourceItem];
 }
 
 RCT_EXPORT_METHOD(cancelDownload) {
-    if(!sourceItem || !offlineManager) {
+    if(!sourceItem) {
         return ;
     }
+    
+    BMPOfflineManager *offlineManager = [BMPOfflineManager sharedInstance];
 
     [offlineManager cancelDownloadForSourceItem:sourceItem];
 }
