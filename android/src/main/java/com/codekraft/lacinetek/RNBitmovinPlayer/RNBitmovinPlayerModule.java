@@ -1,5 +1,5 @@
 
-package com.xxsnakerxx.RNBitmovinPlayer;
+package com.codekraft.lacinetek.RNBitmovinPlayer;
 
 import android.view.View;
 

@@ -1,4 +1,4 @@
-package com.xxsnakerxx.RNBitmovinPlayer;
+package com.codekraft.lacinetek.RNBitmovinPlayer;
 
 import com.bitmovin.player.api.event.data.ErrorEvent;
 import com.bitmovin.player.api.event.data.FullscreenEnterEvent;
@@ -33,6 +33,7 @@ import com.bitmovin.player.api.event.listener.OnFullscreenExitListener;
 import com.bitmovin.player.config.PlayerConfiguration;
 import com.bitmovin.player.BitmovinPlayer;
 import com.bitmovin.player.BitmovinPlayerView;
+import com.bitmovin.player.offline.OfflineSourceItem;
 import com.bitmovin.player.ui.FullscreenHandler;
 import com.bitmovin.player.config.drm.DRMSystems;
 import com.bitmovin.player.config.media.SourceConfiguration;
@@ -50,6 +51,7 @@ import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.google.gson.Gson;
 
 import java.util.Map;
 import java.util.UUID;
@@ -63,10 +65,15 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
 
     public static final String REACT_CLASS = "RNBitmovinPlayer";
 
+    private boolean _fullscreen;
+    private double _progress;
+    private boolean _finished;
+
     private BitmovinPlayerView _playerView;
     private BitmovinPlayer _player;
-    private boolean _fullscreen;
+
     private ThemedReactContext _reactContext;
+    private Gson gson = new Gson();
 
     @Override
     public String getName() {
@@ -159,6 +166,9 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         _playerView = new BitmovinPlayerView(context);
         _player = _playerView.getPlayer();
         _fullscreen = false;
+        _finished = false;
+
+        _progress = 0;
 
         setListeners();
 
@@ -167,12 +177,22 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
 
     @Override
     public void onDropViewInstance(BitmovinPlayerView view) {
-        _playerView.onDestroy();
+        view.onDestroy();
 
         super.onDropViewInstance(view);
+    }
 
-        _player = null;
-        _playerView = null;
+    @ReactProp(name = "initialProgress")
+    public void setInitialProgress(BitmovinPlayerView view, double initialProgress) {
+      _progress = initialProgress;
+
+      _player.seek(initialProgress);
+
+    }
+
+    @ReactProp(name = "isFullscreen")
+    public void setIsFullscreen(BitmovinPlayerView view, boolean isFullscreen) {
+      _fullscreen = isFullscreen;
     }
 
     @ReactProp(name = "configuration")
@@ -180,14 +200,19 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         PlayerConfiguration configuration = new PlayerConfiguration();
 
         ReadableMap sourceMap = null;
-        ReadableMap posterMap = null;
         ReadableMap styleMap = null;
 
         if (config.hasKey("source")) {
             sourceMap = config.getMap("source");
         }
 
-        if (sourceMap != null && sourceMap.getString("url") != null) {
+        if (config.hasKey("offlineSource") && config.getString("offlineSource").length() > 1) {
+            String offlineSource = config.getString("offlineSource");
+            OfflineSourceItem offlineSourceItem = this.gson.fromJson(offlineSource, OfflineSourceItem.class);
+
+            configuration.setSourceItem(offlineSourceItem);
+        }
+        else if (sourceMap != null && sourceMap.getString("url") != null) {
 
             String userDataString = new String("{\"userId\":\"user1\", \"sessionId\":\"session-test\", \"merchant\":\"kinow_lacinetek\"}");
             Map<String, String> userDataMap = new HashMap<String, String>();
@@ -224,53 +249,10 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
             sourceConfiguration.addSourceItem(sourceItem);
             configuration.setSourceConfiguration(sourceConfiguration);
 
-            /*if (sourceMap.getString("title") != null) {
-                configuration.getSourceItem().setTitle(sourceMap.getString("title"));
-            }
-
-            if (config.hasKey("poster")) {
-                posterMap = config.getMap("poster");
-            }
-
-            if (posterMap != null && posterMap.getString("url") != null) {
-                boolean persistent = false;
-
-                if (posterMap.hasKey("persistent")) {
-                    persistent = posterMap.getBoolean("persistent");
-                }
-
-                configuration.getSourceItem()
-                        .setPosterImage(posterMap.getString("url"), persistent);
-            }
-
-            if (config.hasKey("style")) {
-                styleMap = config.getMap("style");
-            }
-
-            if (styleMap != null) {
-                if (styleMap.hasKey("uiEnabled") && !styleMap.getBoolean("uiEnabled")) {
-                    configuration.getStyleConfiguration().setUiEnabled(false);
-                }
-
-                if (styleMap.hasKey("uiCss") && styleMap.getString("uiCss") != null) {
-                    configuration.getStyleConfiguration().setPlayerUiCss(styleMap.getString("uiCss"));
-                }
-
-                if (styleMap.hasKey("supplementalUiCss") && styleMap.getString("supplementalUiCss") != null) {
-                    configuration.getStyleConfiguration().setSupplementalPlayerUiCss(styleMap.getString("supplementalUiCss"));
-                }
-
-                if (styleMap.hasKey("uiJs") && styleMap.getString("uiJs") != null) {
-                    configuration.getStyleConfiguration().setPlayerUiJs(styleMap.getString("uiJs"));
-                }
-
-                if (styleMap.hasKey("fullscreenIcon") && styleMap.getBoolean("fullscreenIcon")) {
-                    _playerView.setFullscreenHandler(this);
-                }
-            }*/
-
-            _player.setup(configuration);
         }
+
+        _playerView.setFullscreenHandler(this);
+        _player.setup(configuration);
     }
 
     @Override
@@ -290,11 +272,27 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
     @Override
     public void onFullscreenRequested() {
         _fullscreen = true;
+
+        WritableMap map = Arguments.createMap();
+        map.putDouble("currentTime", _progress);
+
+        _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+          _playerView.getId(),
+          "onFullscreenEnter",
+          map);
     }
 
     @Override
     public void onFullscreenExitRequested() {
         _fullscreen = false;
+
+        WritableMap map = Arguments.createMap();
+        map.putDouble("currentTime", _progress);
+
+        _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+          _playerView.getId(),
+          "onFullscreenExit",
+          map);
     }
 
     @Override
@@ -312,10 +310,27 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         _playerView.onDestroy();
     }
 
+    private WritableMap calculateProgress(double currentTime) {
+        double currentProgress = currentTime / _player.getDuration();
+        double percentage  = Math.round(currentProgress * 100);
+  
+        WritableMap map = Arguments.createMap();
+        map.putDouble("currentTime", currentTime);
+        map.putDouble("percentage", percentage);
+  
+        return map;
+    }
+
     private void setListeners() {
         _player.addEventListener(new OnReadyListener() {
             public void onReady(ReadyEvent event) {
+              _player.seek(_progress);
+              _finished = false;
+
+                double duration = _player.getDuration();
+
                 WritableMap map = Arguments.createMap();
+                map.putDouble("duration", duration);
 
                 _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
                         _playerView.getId(),
@@ -328,12 +343,21 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
             public void onPlay(PlayEvent event) {
                 WritableMap map = Arguments.createMap();
 
+              if (_finished) {
+                _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                  _playerView.getId(),
+                  "onReplay",
+                  map);
+
+                _finished = false;
+              } else {
                 map.putDouble("time", event.getTime());
 
                 _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                        _playerView.getId(),
-                        "onPlay",
-                        map);
+                  _playerView.getId(),
+                  "onPlay",
+                  map);
+              }
             }
         });
 
@@ -354,9 +378,10 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         _player.addEventListener(new OnTimeChangedListener() {
             @Override
             public void onTimeChanged(TimeChangedEvent event) {
-                WritableMap map = Arguments.createMap();
+                 _progress = event.getTime();
 
-                map.putDouble("time", event.getTime());
+
+                WritableMap map = calculateProgress(event.getTime());
 
                 _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
                         _playerView.getId(),
@@ -392,6 +417,8 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         _player.addEventListener(new OnPlaybackFinishedListener() {
             @Override
             public void onPlaybackFinished(PlaybackFinishedEvent event) {
+                _finished = true;
+
                 WritableMap map = Arguments.createMap();
 
                 _reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
@@ -458,7 +485,14 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         _player.addEventListener(new OnSeekListener() {
             @Override
             public void onSeek(SeekEvent event) {
-                WritableMap map = Arguments.createMap();
+
+                _progress = event.getSeekTarget();
+
+                WritableMap map = calculateProgress(event.getSeekTarget());
+
+                if (map.getDouble("percentage") < 95) {
+                  _finished = false;
+                }
 
                 map.putDouble("seekTarget", event.getSeekTarget());
                 map.putDouble("position", event.getPosition());
