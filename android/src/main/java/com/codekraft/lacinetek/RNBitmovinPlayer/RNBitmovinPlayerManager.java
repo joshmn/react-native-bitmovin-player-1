@@ -214,14 +214,14 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
         }
         else if (sourceMap != null && sourceMap.getString("url") != null) {
 
-            String userDataString = new String("{\"userId\":\"user1\", \"sessionId\":\"session-test\", \"merchant\":\"kinow_lacinetek\"}");
+            String userDataString = String.format("{\"userId\":\"%s\", \"sessionId\":\"%s\", \"merchant\":\"kinow_lacinetek\"}", sourceMap.getString("userId"), sourceMap.getString("sessionId"));
             Map<String, String> userDataMap = new HashMap<String, String>();
             Encoder encoder = Base64.getEncoder();
             byte[] data = encoder.encode(userDataString.getBytes());
 
             userDataMap.put("dt-custom-data", new String(data));
 
-            WidevineConfiguration widevineConfiguration = new WidevineConfiguration("https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/");
+            WidevineConfiguration widevineConfiguration = new WidevineConfiguration("https://lic.drmtoday.com/license-proxy-widevine/cenc/");
             widevineConfiguration.setHttpHeaders(userDataMap);
 
             widevineConfiguration.setPrepareLicenseCallback(new PrepareLicenseCallback()
