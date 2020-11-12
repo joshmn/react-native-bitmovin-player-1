@@ -56,8 +56,7 @@ import com.google.gson.Gson;
 import java.util.Map;
 import java.util.UUID;
 import java.util.HashMap;
-import java.util.Base64;
-import java.util.Base64.Encoder;
+import android.util.Base64;
 import org.json.JSONObject;
 import org.json.JSONException;
 
@@ -216,8 +215,7 @@ public class RNBitmovinPlayerManager extends SimpleViewManager<BitmovinPlayerVie
 
             String userDataString = String.format("{\"userId\":\"%s\", \"sessionId\":\"%s\", \"merchant\":\"kinow_lacinetek\"}", sourceMap.getString("userId"), sourceMap.getString("sessionId"));
             Map<String, String> userDataMap = new HashMap<String, String>();
-            Encoder encoder = Base64.getEncoder();
-            byte[] data = encoder.encode(userDataString.getBytes());
+            byte[] data = Base64.encode(userDataString.getBytes(), Base64.NO_WRAP);
 
             userDataMap.put("dt-custom-data", new String(data));
 
